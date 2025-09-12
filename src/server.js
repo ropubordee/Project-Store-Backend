@@ -156,9 +156,9 @@ app.get("/book/orderBy", async (req, res) => {
         price: "desc",
       },
     });
-    res.send({ reslut: data });
+    res.send({ result: data });
   } catch (e) {
-    res.status(500).send({ message: e.message });
+    res.status(500).send({ error: e.message });
   }
 });
 
@@ -171,7 +171,7 @@ app.get("/book/gt", async (req, res) => {
         },
       },
     });
-    res.send({ reslut: data });
+    res.send({ result: data });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
@@ -186,7 +186,7 @@ app.get("/book/lt", async (req, res) => {
         },
       },
     });
-    res.send({ reslut: data });
+    res.send({ result: data });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
@@ -202,7 +202,116 @@ app.get("/book/notNull", async (req, res) => {
       },
     });
 
-    res.send({reslut : data})
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/book/isNull", async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        detail: null,
+      },
+    });
+
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/book/betwenn", async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        price: {
+          lte: 1500, // <=1500
+          gte: 900, // >=900
+        },
+      },
+    });
+
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/book/sum", async (req, res) => {
+  try {
+    const data = await prisma.book.aggregate({
+      _sum: {
+        price: true,
+      },
+    });
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+app.get("/book/max", async (req, res) => {
+  try {
+    const data = await prisma.book.aggregate({
+      _max: {
+        price: true,
+      },
+    });
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+app.get("/book/min", async (req, res) => {
+  try {
+    const data = await prisma.book.aggregate({
+      _min: {
+        price: true,
+      },
+    });
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+app.get("/book/avg", async (req, res) => {
+  try {
+    const data = await prisma.book.aggregate({
+      _avg: {
+        price: true,
+      },
+    });
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/book/findYearMonthDay", async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        registerDate: new Date('2024-05-08'),
+      },
+    });
+    res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/book/findYearMonth", async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        registerDate: {
+          gte : new Date('2024-05-01'),
+          lte : new Date('2024-05-31')
+        }
+      },
+    });
+    res.send({ result: data });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
