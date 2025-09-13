@@ -3,6 +3,7 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const { PrismaClient } = require("@prisma/client");
 const { error } = require("console");
+const jwt = require("jsonwebtoken");
 const prisma = new PrismaClient();
 
 const app = express();
@@ -292,7 +293,7 @@ app.get("/book/findYearMonthDay", async (req, res) => {
   try {
     const data = await prisma.book.findMany({
       where: {
-        registerDate: new Date('2024-05-08'),
+        registerDate: new Date("2024-05-08"),
       },
     });
     res.send({ result: data });
@@ -306,12 +307,43 @@ app.get("/book/findYearMonth", async (req, res) => {
     const data = await prisma.book.findMany({
       where: {
         registerDate: {
-          gte : new Date('2024-05-01'),
-          lte : new Date('2024-05-31')
-        }
+          gte: new Date("2024-05-01"),
+          lte: new Date("2024-05-31"),
+        },
       },
     });
     res.send({ result: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/user/createToken", async (req, res) => {
+  try {
+    const secret = process.env.TOKEN_SECRET;
+    const payload = {
+      id: 100,
+      name: "Yuro",
+      level: "admin",
+    };
+
+    const token = jwt.sign(payload, secret, { expiresIn: "1d" });
+
+    res.send({ token: token });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/user/verifyToken", (req, res) => {
+  try {
+    const secret = process.env.TOKEN_SECRET;
+
+    const token =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwLCJuYW1lIjoiWXVybyIsImxldmVsIjoiYWRtaW4iLCJpYXQiOjE3NTc3NzQzNDgsImV4cCI6MTc1Nzg2MDc0OH0.2pC8jwr3YgMz3p2scoc8siMir2-xk97TJY4ukMXGQNk";
+    const result = jwt.verify(token, secret);
+
+    res.send({ result: result });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
