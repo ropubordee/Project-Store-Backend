@@ -4,12 +4,16 @@ const bodyParser = require("body-parser");
 const { PrismaClient } = require("@prisma/client");
 const { error } = require("console");
 const jwt = require("jsonwebtoken");
+const fileUpload = require("express-fileupload");
 const prisma = new PrismaClient();
 
 const app = express();
 const port = process.env.PORT;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload());
+
+app.use("/uploads", express.static("uploads"));
 
 const checkSingIn = (req, res, next) => {
   try {
@@ -416,6 +420,69 @@ app.get("/multiModel", async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 });
+
+app.post("/book/testUpload", async (req, res) => {
+  try {
+    const myFile = await req.files.myFile;
+    myFile.mv("./uploads/" + myFile.name, (err) => {
+      if (err) {
+        res.status(500).send({ error: err });
+      }
+      res.send({ message: "success" });
+    });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+app.get("/readFile", (req, res) => {
+  try {
+    const fs = require("fs");
+    fs.readFile("./test.txt", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      res.send(data);
+    });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+app.get("/writeFile", (req, res) => {
+  try {
+    const fs = require("fs");
+    fs.writeFile("./test.txt", "Hello By Pubordee", (err) => {
+      if (err) {
+        throw err;
+      }
+    });
+    res.send({ message: "success" });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get("/removeFile", (req, res) => {
+  try {
+    const fs = require('fs')
+    fs.unlinkSync('test.txt');
+    res.send({message : 'success'})
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/fileExists',(req,res)=>{
+  try {
+    const fs = require('fs')
+    const found = fs.existsSync('package.json')
+
+    res.send({ found : found})
+  } catch (e) {
+    res.status(500).send({error : e.message})
+  }
+})
 
 app.listen(port, () => {
   console.log(`Server runing on port: ${port}`);
