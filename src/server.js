@@ -1,146 +1,29 @@
 const express = require("express");
 require("dotenv").config();
 const bodyParser = require("body-parser");
-const { PrismaClient } = require("@prisma/client");
 const { error } = require("console");
-const jwt = require("jsonwebtoken");
 const fileUpload = require("express-fileupload");
-const prisma = new PrismaClient();
-
+const bookRoute = require('./routes/bookRoute')
+const searchRoute = require('./routes/searchRoute')
+const userinfoRoute = require('./routes/userinfoRoute')
+const cors = require("cors");
 const app = express();
 const port = process.env.PORT;
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 
 app.use("/uploads", express.static("uploads"));
 
-const checkSingIn = (req, res, next) => {
-  try {
-    const secret = process.env.TOKEN_SECRET;
-    const token = req.headers["authorization"];
-    const result = jwt.verify(token, secret);
 
-    if (result != undefined) {
-      next();
-    }
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-};
 
-app.get("/user/info", checkSingIn, (req, res) => {
-  try {
-    res.send("Hello back office user info");
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
+app.use('/book',bookRoute)
+app.use('/book',searchRoute)
+app.use('/user',userinfoRoute)
 
-app.get("/", (req, res) => {
-  res.send("Hello Word");
-});
 
-app.get("/hello/:name", (req, res) => {
-  res.send("hello" + req.params.name);
-});
 
-app.get("/h1/:name/:age", (req, res) => {
-  const name = req.params.name;
-  const age = req.params.age;
-  res.send(`name ${name} age ${age}`);
-});
-
-app.post("/hello", (req, res) => {
-  res.send(req.body);
-});
-
-app.put("/myput", (req, res) => {
-  res.send(req.body);
-});
-
-app.put("/updateCustomer/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const data = req.body;
-
-  res.send({ id: id, data: data });
-});
-
-app.delete("/myDelete/:id", (req, res) => {
-  res.send(`id = ${req.params.id}`);
-});
-
-app.get("/book/list", async (req, res) => {
-  const data = await prisma.book.findMany();
-  res.send({ data: data });
-});
-
-app.post("/book/create", async (req, res) => {
-  const data = req.body;
-  const result = await prisma.book.create({
-    data: data,
-  });
-
-  res.send({ result: result });
-});
-
-app.post("/book/createManual", async (req, res) => {
-  const result = await prisma.book.create({
-    data: {
-      isbn: "1004",
-      name: "Flutter",
-      price: 850,
-    },
-  });
-  res.send({ result: result });
-});
-
-app.put("/book/update/:id", async (req, res) => {
-  try {
-    await prisma.book.update({
-      data: {
-        isbn: "10022",
-        name: "test update",
-        price: 900,
-      },
-      where: {
-        id: parseInt(req.params.id),
-      },
-    });
-    res.send({ message: "success" });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.delete("/book/remove/:id", async (req, res) => {
-  try {
-    await prisma.book.delete({
-      where: {
-        id: parseInt(req.params.id),
-      },
-    });
-    res.send({ message: "success" });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.post("/book/search", async (req, res) => {
-  try {
-    const keyword = req.body.keyword;
-    const data = await prisma.book.findMany({
-      where: {
-        name: {
-          contains: keyword,
-        },
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
 
 app.post("/book/startstWith", async (req, res) => {
   try {
@@ -465,24 +348,65 @@ app.get("/writeFile", (req, res) => {
 
 app.get("/removeFile", (req, res) => {
   try {
-    const fs = require('fs')
-    fs.unlinkSync('test.txt');
-    res.send({message : 'success'})
+    const fs = require("fs");
+    fs.unlinkSync("test.txt");
+    res.send({ message: "success" });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
 });
 
-app.get('/fileExists',(req,res)=>{
+app.get("/fileExists", (req, res) => {
   try {
-    const fs = require('fs')
-    const found = fs.existsSync('package.json')
+    const fs = require("fs");
+    const found = fs.existsSync("package.json");
 
-    res.send({ found : found})
+    res.send({ found: found });
   } catch (e) {
-    res.status(500).send({error : e.message})
+    res.status(500).send({ error: e.message });
   }
-})
+});
+
+app.get("/createPdf", (req, res) => {
+  const PDFDocument = require("pdfkit");
+  const fs = require("fs");
+  const doc = new PDFDocument();
+  doc.pipe(fs.createWriteStream("output.pdf"));
+  doc.fontSize(25).text("Sum text and embeded font", 100, 100);
+
+  // 2หน้า & เพิ่มหน้า
+  doc.addPage().fontSize(25).text("Here is some vector graphics..", 100, 100);
+  doc.end();
+
+  res.send({ message: "success" });
+});
+
+app.get("/readExcel", async (req, res) => {
+  try {
+    const excel = require("exceljs");
+    const wb = new excel.Workbook();
+    await wb.xlsx.readFile("productExport.xlsx");
+    const ws = wb.getWorksheet(1);
+
+    for (let i = 1; i < ws.columnCount; i++) {
+      const row = ws.getRow(i);
+      const barcode = row.getCell(1).value;
+      const name = row.getCell(2).value;
+      const cost = row.getCell(3).value;
+      const sale = row.getCell(4).value;
+      const send = row.getCell(5).value;
+      const unit = row.getCell(6).value;
+      const point = row.getCell(7).value;
+      const productTypeId = row.getCell(8).value;
+
+      console.log(barcode, name, cost, sale, send, unit, point, productTypeId);
+    }
+
+    res.send({ message: "success" });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server runing on port: ${port}`);
