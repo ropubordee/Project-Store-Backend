@@ -1,21 +1,18 @@
 const prisma = require("../config/prisma");
+const bookService = require("../services/bookservice");
 
 const getBookList = async (req, res) => {
   try {
-    const data = await prisma.book.findMany();
-
+    const data = await bookService.getBookList();
     res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
 };
-
 const createBook = async (req, res) => {
   try {
     const data = req.body;
-    const result = await prisma.book.create({
-      data: data,
-    });
+    const result = await bookService.createBook(data);
     res.send({ result: result });
   } catch (e) {
     res.status(500).send({ error: e.message });
@@ -24,13 +21,7 @@ const createBook = async (req, res) => {
 
 const createBookManual = async (req, res) => {
   try {
-    const result = await prisma.book.create({
-      data: {
-        isbn: "1004",
-        name: "Flutter",
-        price: 850,
-      },
-    });
+    const result = await bookService.createBookManual();
     res.send({ result: result });
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -40,35 +31,25 @@ const createBookManual = async (req, res) => {
 const updateBook = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.book.update({
-        data : {
-            isbn: "10022",
-        name: "test update",
-        price: 900,
-        },
-        where : {
-            id : parseInt(id)
-        }
-    })
+    const updateData = req.body;
+
+    const updateBook = await bookService.UpdateBook(id, updateData);
+    res.send({ result: updateBook });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 };
 
-const removeBook = async (req,res)=>{
-   try {
-     const {id} = req.params
-     await prisma.book.delete({
-        where :{
-            id : parseInt(id)
-        }
-     })
+const removeBook = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const removeBook = await bookService.removeBook(bookId);
 
-     res.send({ message : 'success'})
-   } catch (error) {
-    res.status(500).send({error : error.message})
-   }
-}
+    res.send({ message: "Book deleted successfully", result: removeBook });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+};
 
 module.exports = {
   getBookList,

@@ -1,11 +1,15 @@
 const express = require("express");
 require("dotenv").config();
 const bodyParser = require("body-parser");
-const { error } = require("console");
 const fileUpload = require("express-fileupload");
-const bookRoute = require('./routes/bookRoute')
-const searchRoute = require('./routes/searchRoute')
-const userinfoRoute = require('./routes/userinfoRoute')
+const bookRoute = require("./routes/bookRoute");
+const searchRoute = require("./routes/searchRoute");
+const userinfoRoute = require("./routes/userinfoRoute");
+const booksortRoute = require("./routes/bookSortRoute");
+const notandisNullRoute = require("./routes/not-isNull");
+const bookaggregateRoute = require("./routes/bookaggregateRoute");
+const findYearRoute = require("./routes/findYearRoute");
+const userRoute = require("./routes/ีuserRoute");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT;
@@ -16,233 +20,31 @@ app.use(fileUpload());
 
 app.use("/uploads", express.static("uploads"));
 
+app.use("/book", bookRoute);
+app.use("/book", searchRoute);
+app.use("/book", booksortRoute);
+app.use("/user", userinfoRoute);
+app.use("/book", notandisNullRoute);
+app.use("/book", bookaggregateRoute);
+app.use("/book", findYearRoute);
+app.use("/user", userRoute);
 
+// app.get("/user/createToken", async (req, res) => {
+//   try {
+//     const secret = process.env.TOKEN_SECRET;
+//     const payload = {
+//       id: 100,
+//       name: "Yuro",
+//       level: "admin",
+//     };
 
-app.use('/book',bookRoute)
-app.use('/book',searchRoute)
-app.use('/user',userinfoRoute)
+//     const token = jwt.sign(payload, secret, { expiresIn: "1d" });
 
-
-
-
-app.post("/book/startstWith", async (req, res) => {
-  try {
-    const keyword = req.body.keyword;
-    const data = await prisma.book.findMany({
-      where: {
-        name: {
-          startsWith: keyword,
-        },
-      },
-    });
-
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.post("/book/endsWith", async (req, res) => {
-  try {
-    const keyword = req.body.keyword;
-    const data = await prisma.book.findMany({
-      where: {
-        name: {
-          endsWith: keyword,
-        },
-      },
-    });
-
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/orderBy", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      orderBy: {
-        price: "desc",
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/gt", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        price: {
-          gt: 900, // >900
-        },
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/lt", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        price: {
-          lt: 1000, // >1000
-        },
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/notNull", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        detail: {
-          not: null,
-        },
-      },
-    });
-
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/isNull", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        detail: null,
-      },
-    });
-
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/betwenn", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        price: {
-          lte: 1500, // <=1500
-          gte: 900, // >=900
-        },
-      },
-    });
-
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/sum", async (req, res) => {
-  try {
-    const data = await prisma.book.aggregate({
-      _sum: {
-        price: true,
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-app.get("/book/max", async (req, res) => {
-  try {
-    const data = await prisma.book.aggregate({
-      _max: {
-        price: true,
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-app.get("/book/min", async (req, res) => {
-  try {
-    const data = await prisma.book.aggregate({
-      _min: {
-        price: true,
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-app.get("/book/avg", async (req, res) => {
-  try {
-    const data = await prisma.book.aggregate({
-      _avg: {
-        price: true,
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/findYearMonthDay", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        registerDate: new Date("2024-05-08"),
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/book/findYearMonth", async (req, res) => {
-  try {
-    const data = await prisma.book.findMany({
-      where: {
-        registerDate: {
-          gte: new Date("2024-05-01"),
-          lte: new Date("2024-05-31"),
-        },
-      },
-    });
-    res.send({ result: data });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
-
-app.get("/user/createToken", async (req, res) => {
-  try {
-    const secret = process.env.TOKEN_SECRET;
-    const payload = {
-      id: 100,
-      name: "Yuro",
-      level: "admin",
-    };
-
-    const token = jwt.sign(payload, secret, { expiresIn: "1d" });
-
-    res.send({ token: token });
-  } catch (e) {
-    res.status(500).send({ error: e.message });
-  }
-});
+//     res.send({ token: token });
+//   } catch (e) {
+//     res.status(500).send({ error: e.message });
+//   }
+// });
 
 app.get("/user/verifyToken", (req, res) => {
   try {
